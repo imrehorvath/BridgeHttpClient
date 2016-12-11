@@ -1,0 +1,32 @@
+#######################################
+# Syntax Coloring Map
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+BridgeHttpClient				KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+get											KEYWORD2
+post										KEYWORD2
+put											KEYWORD2
+del											KEYWORD2
+getResponseCode					KEYWORD2
+getResponseHeaders			KEYWORD2
+getAsync								KEYWORD2
+postAsync								KEYWORD2
+putAsync								KEYWORD2
+delAsync								KEYWORD2
+enableInsecure					KEYWORD2
+addHeader								KEYWORD2
+basicAuth								KEYWORD2
+clearHeaders						KEYWORD2
+clearAuth								KEYWORD2
+getResponseHeaderValue	KEYWORD2
+
+######################################
+# Constants (LITERAL1)
+#######################################
