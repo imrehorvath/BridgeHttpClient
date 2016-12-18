@@ -24,9 +24,12 @@
 class BridgeHttpClient : public Process {
 
   public:
-    BridgeHttpClient() : isInsecureEnabled(false),
-                         user(NULL), passwd(NULL),
-                         headerIndex(0) {}
+
+    static const size_t HEADERCNT = 10; // Support 10 extra headers
+
+    BridgeHttpClient() : _isInsecureEnabled(false),
+                         _user(NULL), _passwd(NULL),
+                         _extraHeaderIdx(0) {}
 
     void get(const char *url);
     void post(const char *url, const char *data);
@@ -64,7 +67,7 @@ class BridgeHttpClient : public Process {
      * Useful in the following case for example:
      * Certificate cannot be authenticated with known CA certificates.
      */
-    void enableInsecure() { isInsecureEnabled = true; }
+    void enableInsecure();
 
     /**
      * Call this method before issuing the request,
@@ -84,13 +87,13 @@ class BridgeHttpClient : public Process {
      * Call this method between the different request calls on the same client,
      * to clear/setup the request headers for the next call.
      */
-    void clearHeaders() { headerIndex = 0; }
+    void clearHeaders();
 
     /**
      * Call this method between the different request calls on the same client,
      * to clear the previously set basic authorization for the subsequent call.
      */
-    void clearAuth() { user = passwd = NULL; }
+    void clearAuth();
 
     /**
      * Call this method after the request has finished,
@@ -101,17 +104,27 @@ class BridgeHttpClient : public Process {
     String getResponseHeaderValue(const String& header);
 
   private:
-    String tempFileName;
-    bool isInsecureEnabled;
-    const char *user;
-    const char *passwd;
-    static const int HEADERCNT = 10; // We handle max. 10 extra request headers
-    const char *headers[HEADERCNT];
-    int headerIndex;
-    String cachedRespHeaders;
+    String _tempFileName;
 
+    bool _isInsecureEnabled;
+
+    const char *_user;
+    const char *_passwd;
+
+    const char *_extraHeaders[HEADERCNT];
+    int _extraHeaderIdx;
+
+    String _cachedRespHeaders;
+
+    /**
+     * Sends the actual request via cURL on the Linux side
+     */
     void request(const char *verb, const char *url, const char *data, bool async=false);
-    void clearCachedRespHeaders() { cachedRespHeaders = ""; }
+
+    /**
+     * Clears the cached response headers between subsequent requests
+     */
+    void clearCachedRespHeaders();
 };
 
 #endif

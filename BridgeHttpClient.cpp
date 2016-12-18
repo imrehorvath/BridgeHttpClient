@@ -36,7 +36,7 @@ void BridgeHttpClient::del(const char *url) {
 
 unsigned int BridgeHttpClient::getResponseCode() {
   Process p;
-  p.runShellCommand("head -n 1 " + tempFileName + " | cut -d' ' -f2");
+  p.runShellCommand("head -n 1 " + _tempFileName + " | cut -d' ' -f2");
   return p.parseInt();
 }
 
@@ -44,7 +44,7 @@ String BridgeHttpClient::getResponseHeaders() {
   String responseHeaders;
 
   Process p;
-  p.runShellCommand("tail -n +2 " + tempFileName);
+  p.runShellCommand("tail -n +2 " + _tempFileName);
 
   while (p.available() > 0) {
     char c = p.read();
@@ -71,26 +71,38 @@ void BridgeHttpClient::delAsync(const char *url) {
   request("DELETE", url, NULL, true);
 }
 
+void BridgeHttpClient::enableInsecure() {
+  _isInsecureEnabled = true;
+}
+
 int BridgeHttpClient::addHeader(const char *header) {
-  if (headerIndex < HEADERCNT) {
-    headers[headerIndex++] = header;
+  if (_extraHeaderIdx < HEADERCNT) {
+    _extraHeaders[_extraHeaderIdx++] = header;
     return 0;
   }
   return -1;
 }
 
 void BridgeHttpClient::basicAuth(const char *user, const char *passwd) {
-  this->user = user;
-  this->passwd = passwd;
+  _user = user;
+  _passwd = passwd;
+}
+
+void BridgeHttpClient::clearHeaders() {
+  _extraHeaderIdx = 0;
+}
+
+void BridgeHttpClient::clearAuth() {
+  _user = _passwd = NULL;
 }
 
 String BridgeHttpClient::getResponseHeaderValue(const String& header) {
-  if (cachedRespHeaders.length() == 0) {
-    cachedRespHeaders = getResponseHeaders();
+  if (_cachedRespHeaders.length() == 0) {
+    _cachedRespHeaders = getResponseHeaders();
   }
-  int startOfValue = cachedRespHeaders.indexOf(':', cachedRespHeaders.indexOf(header)) + 1;
-  String respValue = cachedRespHeaders.substring(startOfValue,
-                                                 cachedRespHeaders.indexOf('\n', startOfValue));
+  int startOfValue = _cachedRespHeaders.indexOf(':', _cachedRespHeaders.indexOf(header)) + 1;
+  String respValue = _cachedRespHeaders.substring(startOfValue,
+                                                 _cachedRespHeaders.indexOf('\n', startOfValue));
   respValue.trim();
   return respValue;
 }
@@ -98,36 +110,36 @@ String BridgeHttpClient::getResponseHeaderValue(const String& header) {
 void BridgeHttpClient::request(const char *verb, const char *url, const char *data, bool async) {
   Process p;
   p.runShellCommand("mktemp");
-  tempFileName = p.readStringUntil('\n');
+  _tempFileName = p.readStringUntil('\n');
 
   clearCachedRespHeaders();
 
   begin("curl");
   addParameter("-D");
-  addParameter(tempFileName);
+  addParameter(_tempFileName);
 
   if (verb != "GET") {
     addParameter("-X");
     addParameter(verb);
   }
 
-  if (isInsecureEnabled) {
+  if (_isInsecureEnabled) {
     addParameter("-k");
   }
 
-  if (user && passwd) {
+  if (_user && _passwd) {
     String auth;
-    auth += user;
+    auth += _user;
     auth += ":";
-    auth += passwd;
+    auth += _passwd;
 
     addParameter("-u");
     addParameter(auth);
   }
 
-  for (int i = 0; i < headerIndex; i++) {
+  for (int i = 0; i < _extraHeaderIdx; i++) {
     addParameter("-H");
-    addParameter(headers[i]);
+    addParameter(_extraHeaders[i]);
   }
 
   if (data != NULL) {
@@ -142,4 +154,8 @@ void BridgeHttpClient::request(const char *verb, const char *url, const char *da
   } else {
     (void) run();
   }
+}
+
+void BridgeHttpClient::clearCachedRespHeaders() {
+  _cachedRespHeaders = "";
 }
