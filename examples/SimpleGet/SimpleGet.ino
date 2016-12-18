@@ -11,7 +11,7 @@ void setup() {
   SerialUSB.begin(9600);
   while (!SerialUSB); // wait for a serial connection
 
-  BridgeHttpClient client;
+  BridgeHttpClient<> client;
 
   client.get("http://httpbin.org/headers");
 

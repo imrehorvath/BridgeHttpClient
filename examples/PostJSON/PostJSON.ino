@@ -11,7 +11,7 @@ void setup() {
   SerialUSB.begin(9600);
   while (!SerialUSB); // wait for a serial connection
 
-  BridgeHttpClient client;
+  BridgeHttpClient<3> client; // 3 extra headers, you need to specify, because the default is 2
   client.addHeader("X-Api-Key: 12345");
   client.addHeader("Accept: application/json");
   client.addHeader("Content-Type: application/json");

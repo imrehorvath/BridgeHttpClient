@@ -11,7 +11,7 @@ void setup() {
   SerialUSB.begin(9600);
   while (!SerialUSB); // wait for a serial connection
 
-  BridgeHttpClient client;
+  BridgeHttpClient<> client;
   client.basicAuth("user", "password");
 
   client.enableInsecure(); // Using HTTPS and peer cert. will not be able to auth.
