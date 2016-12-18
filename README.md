@@ -39,8 +39,11 @@ unsigned int getResponseCode();
  */
 String getResponseHeaders();
 
-// unsigned int exitValue();  // Method in superclass to retrieve the exit status
-// boolean running();  // Method in superclass which can be used to check if the async request is still running or has finished.
+// Method in superclass to retrieve the exit status
+// unsigned int exitValue();
+
+// Method in superclass which can be used to check if the async request is still running or has finished
+// boolean running();
 
 void getAsync(const char *url);
 void postAsync(const char *url, const char *data);
@@ -54,7 +57,7 @@ void delAsync(const char *url);
  * Useful in the following case for example:
  * Certificate cannot be authenticated with known CA certificates.
  */
-void enableInsecure() { isInsecureEnabled = true; }
+void enableInsecure();
 
 /**
  * Call this method before issuing the request,
@@ -74,13 +77,13 @@ void basicAuth(const char *user, const char *passwd);
  * Call this method between the different request calls on the same client,
  * to clear/setup the request headers for the next call.
  */
-void clearHeaders() { headerIndex = 0; }
+void clearHeaders();
 
 /**
  * Call this method between the different request calls on the same client,
  * to clear the previously set basic authorization for the subsequent call.
  */
-void clearAuth() { user = passwd = NULL; }
+void clearAuth();
 
 /**
  * Call this method after the request has finished,
