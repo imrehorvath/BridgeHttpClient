@@ -50,10 +50,10 @@ client.enableInsecure();
 __Synchronous requests__
 
 ```c++
-// HTTP GET, call wont return until finished
+// HTTP GET, call won't return until finished
 client.get("https://httpbin.org/headers");
 
-// HTTP POST a JSON payload, call wont return until finished
+// HTTP POST a JSON payload, call won't return until finished
 client.post("https://httpbin.org/post", "{\"key\":\"value\"}");
 ```
 
@@ -65,6 +65,7 @@ To check whether the async request has completed or not, you can use the followi
 // HTTP GET, call returns before completion.
 client.getAsync("https://httpbin.org/headers");
 // ...
+// Later you can check whether the call has finished
 if (client.finished()) {
   // Request has finished
 }
