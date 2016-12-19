@@ -9,7 +9,7 @@
 
   Usage:
   1. Replace the placeholder XXXs below with your actual AIO KEY
-  2. Upload the sketch using an USB cable.
+  2. Upload the sketch using a USB cable.
   3. Wait for the RED LED to light up on the board.
   4. Open the serial monitor in the Arduino IDE.
 

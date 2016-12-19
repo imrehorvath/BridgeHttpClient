@@ -8,7 +8,7 @@
   an Uno or other Arduinos.
 
   Usage:
-  1. Upload the sketch using an USB cable.
+  1. Upload the sketch using a USB cable.
   2. Wait for the RED LED to light up on the board.
   3. Open the serial monitor in the Arduino IDE.
 
