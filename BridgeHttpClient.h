@@ -21,29 +21,36 @@
 
 #include <Process.h>
 
-template <size_t C=2>
 class BridgeHttpClient : public Process {
 
   public:
+    // The library supports up to 16 user addable request headers
+    static const size_t EXTRA_HEADERS_MAX = 16;
+
     BridgeHttpClient() : _isInsecureEnabled(false),
                          _user(NULL), _passwd(NULL),
                          _extraHeaderIdx(0) {}
 
-    void get(const char *url) {
-      request("GET", url, NULL);
-    }
+    /**
+     * Synchronous methods
+     */
+    void get(const char *url);
+    void post(const char *url, const char *data);
+    void put(const char *url, const char *data);
+    void del(const char *url);
 
-    void post(const char *url, const char *data) {
-      request("POST", url, data);
-    }
+    /**
+     * Asynchronous methods
+     */
+    void getAsync(const char *url);
+    void postAsync(const char *url, const char *data);
+    void putAsync(const char *url, const char *data);
+    void delAsync(const char *url);
 
-    void put(const char *url, const char *data) {
-      request("PUT", url, data);
-    }
-
-    void del(const char *url) {
-      request("DELETE", url, NULL);
-    }
+    /**
+     * Method to check, if the async request is still running or has finished.
+     */
+    bool finished();
 
     /**
      * Call this method after the request has finished,
@@ -51,11 +58,7 @@ class BridgeHttpClient : public Process {
      *
      * Returns the response code eg. 200
      */
-    unsigned int getResponseCode() {
-      Process p;
-      p.runShellCommand("head -n 1 " + _tempFileName + " | cut -d' ' -f2");
-      return p.parseInt();
-    }
+    unsigned int getResponseCode();
 
     /**
      * Call this method after the request has finished,
@@ -63,39 +66,7 @@ class BridgeHttpClient : public Process {
      *
      * Returns a String object with all the response headers included.
      */
-    String getResponseHeaders() {
-      String responseHeaders;
-
-      Process p;
-      p.runShellCommand("tail -n +2 " + _tempFileName);
-
-      while (p.available() > 0) {
-        char c = p.read();
-        responseHeaders += c;
-      }
-
-      responseHeaders.trim();
-      return responseHeaders;
-    }
-
-    // unsigned int exitValue();  // Method in superclass to retrieve the exit status
-    // boolean running();  // Method in superclass which can be used to check if the async request is still running or has finished.
-
-    void getAsync(const char *url) {
-      request("GET", url, NULL, true);
-    }
-
-    void postAsync(const char *url, const char *data) {
-      request("POST", url, data, true);
-    }
-
-    void putAsync(const char *url, const char *data) {
-      request("PUT", url, data, true);
-    }
-
-    void delAsync(const char *url) {
-      request("DELETE", url, NULL, true);
-    }
+    String getResponseHeaders();
 
     /**
      * Call this method before issuing the requests,
@@ -104,9 +75,7 @@ class BridgeHttpClient : public Process {
      * Useful in the following case for example:
      * Certificate cannot be authenticated with known CA certificates.
      */
-    void enableInsecure() {
-      _isInsecureEnabled = true;
-    }
+    void enableInsecure();
 
     /**
      * Call this method before issuing the request,
@@ -114,55 +83,34 @@ class BridgeHttpClient : public Process {
      *
      * Returns 0 if the header fits into the array of headers. -1 otherwise.
      */
-    int addHeader(const char *header) {
-      if (_extraHeaderIdx < C) {
-        _extraHeaders[_extraHeaderIdx++] = header;
-        return 0;
-      }
-      return -1;
-    }
+    int addHeader(const char *header);
 
     /**
      * Call this method before issuing the request,
      * to include basic authorization into the request.
      */
-    void basicAuth(const char *user, const char *passwd) {
-      _user = user;
-      _passwd = passwd;
-    }
+    void basicAuth(const char *user, const char *passwd);
 
     /**
      * Call this method between the different request calls on the same client,
      * to clear/setup the request headers for the next call.
      */
-    void clearHeaders() {
-      _extraHeaderIdx = 0;
-    }
+    void clearHeaders();
 
     /**
      * Call this method between the different request calls on the same client,
      * to clear the previously set basic authorization for the subsequent call.
      */
-    void clearAuth() {
-      _user = _passwd = NULL;
-    }
+    void clearAuth();
 
     /**
      * Call this method after the request has finished,
      * to get a particular response header value.
      *
-     * Returns a String object representing the response header value
+     * Returns true and sets the value parameter if found,
+     * otherwise return false and doesn't set value parameter at all.
      */
-    String getResponseHeaderValue(const String& header) {
-      if (_cachedRespHeaders.length() == 0) {
-        _cachedRespHeaders = getResponseHeaders();
-      }
-      int startOfValue = _cachedRespHeaders.indexOf(':', _cachedRespHeaders.indexOf(header)) + 1;
-      String respValue = _cachedRespHeaders.substring(startOfValue,
-                                                     _cachedRespHeaders.indexOf('\n', startOfValue));
-      respValue.trim();
-      return respValue;
-    }
+    bool getResponseHeaderValue(const String& header, String& value);
 
   private:
     String _tempFileName;
@@ -172,7 +120,7 @@ class BridgeHttpClient : public Process {
     const char *_user;
     const char *_passwd;
 
-    const char *_extraHeaders[C];
+    const char *_extraHeaders[EXTRA_HEADERS_MAX];
     int _extraHeaderIdx;
 
     String _cachedRespHeaders;
@@ -180,61 +128,12 @@ class BridgeHttpClient : public Process {
     /**
      * Sends the actual request via cURL on the Linux side
      */
-    void request(const char *verb, const char *url, const char *data, bool async=false) {
-      Process p;
-      p.runShellCommand("mktemp");
-      _tempFileName = p.readStringUntil('\n');
-
-      clearCachedRespHeaders();
-
-      begin("curl");
-      addParameter("-D");
-      addParameter(_tempFileName);
-
-      if (verb != "GET") {
-        addParameter("-X");
-        addParameter(verb);
-      }
-
-      if (_isInsecureEnabled) {
-        addParameter("-k");
-      }
-
-      if (_user && _passwd) {
-        String auth;
-        auth += _user;
-        auth += ":";
-        auth += _passwd;
-
-        addParameter("-u");
-        addParameter(auth);
-      }
-
-      for (int i = 0; i < _extraHeaderIdx; i++) {
-        addParameter("-H");
-        addParameter(_extraHeaders[i]);
-      }
-
-      if (data != NULL) {
-        addParameter("-d");
-        addParameter(data);
-      }
-
-      addParameter(url);
-
-      if (async) {
-        runAsynchronously();
-      } else {
-        (void) run();
-      }
-    }
+    void request(const char *verb, const char *url, const char *data, bool async=false);
 
     /**
      * Clears the cached response headers between subsequent requests
      */
-    void clearCachedRespHeaders() {
-      _cachedRespHeaders = "";
-    }
+    void clearCachedRespHeaders();
 };
 
 #endif

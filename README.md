@@ -17,76 +17,69 @@ Features
 Usage
 -----
 
-Because the number of extra request headers needed may vary case to case, the library do not want to enforce a fix number. The user should be able to configure this in a flexible way.
-
-The provided feature is to use a so called non-type parameter template class.
-
-The library sets storage for 2 extra request headers by default. If you do not use this feature at all, or you do not exceed this number you can use the library like this:
+__First instantiate a client__
 
 ```c++
-BridgeHttpClient<> client;
+BridgeHttpClient client;
 ```
 
-However if you need more than 2 request headers, you must set the appropriate number like this:
+__Adding Basic Auth. to your request (optional)__
 
 ```c++
-BridgeHttpClient<4> client;
+client.basicAuth("user", "password");
 ```
 
-With this the library remains efficient and flexible at the same time.
-
-__Adding Basic Auth. to your request__
+__Adding extra request headers to your request (optional)__
 
 ```c++
-void basicAuth(const char *user, const char *passwd);
+client.addHeader("X-Api-Key: 12345");
+client.addHeader("Accept: application/json");
+client.addHeader("Content-Type: application/json");
 ```
 
-__Adding extra request headers to your request__
+_Note:_ The library supports up to 16 extra user addable request headers.
 
-```c++
-int addHeader(const char *header);
-```
-
-__HTTPS requests__
+__When issuing HTTPS requests consider this__
 
 If your HTTPS request fails due to the "certificate cannot be authenticated with known CA certificates" problem, you can circumvent the issue by calling the following method before the request.
 
 ```c++
-void enableInsecure();
+client.enableInsecure();
 ```
 
 __Synchronous requests__
 
 ```c++
-void get(const char *url);
-void post(const char *url, const char *data);
-void put(const char *url, const char *data);
-void del(const char *url);
+// HTTP GET, call wont return until finished
+client.get("https://httpbin.org/headers");
+
+// HTTP POST a JSON payload, call wont return until finished
+client.post("https://httpbin.org/post", "{\"key\":\"value\"}");
 ```
 
 __Asynchronous requests__
 
-```c++
-void getAsync(const char *url);
-void postAsync(const char *url, const char *data);
-void putAsync(const char *url, const char *data);
-void delAsync(const char *url);
-```
-
 To check whether the async request has completed or not, you can use the following method from the parent class.
 
 ```c++
-boolean running();
+// HTTP GET, call returns before completion.
+client.getAsync("https://httpbin.org/headers");
+// ...
+if (client.finished()) {
+  // Request has finished
+}
 ```
-
-If it's not running then it's completed.
 
 __Exit status of the client__
 
 After the sync or async request has finished, you can check the exit status of the client like this.
 
 ```c++
-unsigned int exitValue();
+if (client.exitValue() == 0) {
+  // Success, continue processing
+} else {
+  // Error
+}
 ```
 
 __HTTP response code__
@@ -94,7 +87,9 @@ __HTTP response code__
 If you need the HTTP response code for your application, use the following method.
 
 ```c++
-unsigned int getResponseCode();
+if (client.getResponseCode() == 200) {
+  // HTTP OK
+}
 ```
 
 __HTTP response headers__
@@ -102,19 +97,27 @@ __HTTP response headers__
 To access all the received HTTP response headers, you can use this method.
 
 ```c++
-String getResponseHeaders();
+String responseHeaders = getResponseHeaders();
+// Process response headers by yourself
 ```
 
-It returns all the headers in one string object. This is useful if you want to process the headers by yourself. If you're interested in a particular header value only, use the next method instead!
+_Note:_ It returns all the headers in one string object. This is useful if you want to process the headers by yourself. If you're interested in a particular header value only, use the next method instead!
 
 __HTTP response header value__
 
 ```c++
-String getResponseHeaderValue(const String& header);
+String server;
+if (client.getResponseHeaderValue("Server", server)) {
+  SerialUSB.print("Header \"Server\" has value: ");
+  SerialUSB.println(server);
+} else {
+  SerialUSB.println("Header \"Server\" not found");
+}
 ```
 
 TODO
 ----
 
 * Add proxy support
-* Provide more examples
+* Provide better description
+* Create useful examples
