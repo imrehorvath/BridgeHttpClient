@@ -47,13 +47,13 @@ void setup() {
   client.get("https://io.adafruit.com/api/feeds");
 
   // Collect the response body into this string for parsing
-  String json;
+  String response;
 
   // Dump the response body
   SerialUSB.println("Response Body:");
   while (client.available() > 0) {
     char c = client.read();
-    json += c;
+    response += c;
     SerialUSB.print(c);
   }
 
@@ -61,11 +61,11 @@ void setup() {
   SerialUSB.print("Response code: ");
   SerialUSB.println(client.getResponseCode());
 
-  // Parse the list of feeds and print the name and ids
+  // Parse the list of feeds and print the name and ids, limited to 4 feeds
+  const int JSON_BUFFER = JSON_ARRAY_SIZE(4) + 4*JSON_OBJECT_SIZE(14);
+  StaticJsonBuffer<JSON_BUFFER> jsonBuffer;
 
-  DynamicJsonBuffer jsonBuffer;
-
-  JsonArray& array = jsonBuffer.parseArray(json);
+  JsonArray& array = jsonBuffer.parseArray(response);
   if (!array.success()) {
     SerialUSB.println("parseArray() failed");
     while (1) {}
@@ -73,10 +73,14 @@ void setup() {
 
   for (JsonArray::iterator it = array.begin(); it != array.end(); ++it) {
     JsonObject& feed = *it;
-    const char* name = feed["name"];
-    const char* id = feed["id"];
-    SerialUSB.print("Feed name: "); SerialUSB.println(name);
-    SerialUSB.print("Feed id: "); SerialUSB.println(id);
+
+    SerialUSB.print("Feed name: ");
+    feed["name"].printTo(SerialUSB);
+    SerialUSB.println();
+
+    SerialUSB.print("Feed id: ");
+    feed["id"].printTo(SerialUSB);
+    SerialUSB.println();
   }
 }
 
