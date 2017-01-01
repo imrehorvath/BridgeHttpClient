@@ -20,45 +20,115 @@ Examples
 __List the names and Ids of your Adafruit IO Feeds__
 
 ```c++
+#include <Bridge.h>
+#include <BridgeHttpClient.h>
+
+#include <ArduinoJson.h>
+
+void setup() {
+  pinMode(13, OUTPUT);
+  digitalWrite(13, LOW);
+  Bridge.begin(); // Initialize Bridge
+  digitalWrite(13, HIGH);
+
+  SerialUSB.begin(9600);
+  while (!SerialUSB); // wait for the serial connection
+
+  BridgeHttpClient client;
+
+  // Add request headers
+  // REPLACE THE XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX WITH YOUR AIO KEY!!!
+  client.addHeader("X-AIO-Key: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+  client.addHeader("Accept: application/json");
+
+  // Using HTTPS and peer cert. will not be able to auth.
+  client.enableInsecure();
+
+  // Adafruit IO REST API call
+  client.get("https://io.adafruit.com/api/feeds");
+
+  // Collect the response body into this string for parsing
+  String response;
+
+  while (client.available() > 0) {
+    char c = client.read();
+    response += c;
+  }
+
+  // Parse the list of feeds and print the name and ids, limited to 4 feeds
+  const int JSON_BUFFER = JSON_ARRAY_SIZE(4) + 4*JSON_OBJECT_SIZE(14);
+  StaticJsonBuffer<JSON_BUFFER> jsonBuffer;
+
+  JsonArray& array = jsonBuffer.parseArray(response);
+  if (!array.success()) {
+    SerialUSB.println("parseArray() failed");
+    while (1) {}
+  }
+
+  // List the feed names and Ids
+  SerialUSB.println("Your Adafruit IO Feed Name/Id listing:");
+  for (JsonArray::iterator it=array.begin(); it!=array.end(); ++it) {
+    JsonObject& feed = it->as<JsonObject&>();
+    feed["name"].printTo(SerialUSB);
+    SerialUSB.print("/");
+    feed["id"].printTo(SerialUSB);
+    SerialUSB.println();
+  }
+}
+
+void loop() {
+  // Do nothing
+}
+```
+
+__Asynchronous POST example__
+
+```c++
+#include <Bridge.h>
+#include <BridgeHttpClient.h>
+
 BridgeHttpClient client;
 
-// Add request headers
-// REPLACE THE XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX WITH YOUR AIO KEY!!!
-client.addHeader("X-AIO-Key: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-client.addHeader("Accept: application/json");
+void setup() {
+  pinMode(13, OUTPUT);
+  digitalWrite(13, LOW);
+  Bridge.begin(); // Initialize Bridge
+  digitalWrite(13, HIGH);
 
-// Using HTTPS and peer cert. will not be able to auth.
-client.enableInsecure();
+  SerialUSB.begin(9600);
+  while (!SerialUSB); // wait for a serial connection
 
-// Adafruit IO REST API call
-client.get("https://io.adafruit.com/api/feeds");
+  client.addHeader("X-Api-Key: 12345");
+  client.addHeader("Accept: application/json");
+  client.addHeader("Content-Type: application/json");
 
-// Collect the response body into this string for parsing
-String response;
+  client.enableInsecure(); // Using HTTPS and peer cert. will not be able to auth.
 
-while (client.available() > 0) {
-  char c = client.read();
-  response += c;
+  client.postAsync("https://httpbin.org/post", "{\"key\":\"value\"}");
+  SerialUSB.print("Sending request");
 }
 
-// Parse the list of feeds and print the name and ids, limited to 4 feeds
-const int JSON_BUFFER = JSON_ARRAY_SIZE(4) + 4*JSON_OBJECT_SIZE(14);
-StaticJsonBuffer<JSON_BUFFER> jsonBuffer;
+void loop() {
 
-JsonArray& array = jsonBuffer.parseArray(response);
-if (!array.success()) {
-  SerialUSB.println("parseArray() failed");
-  while (1) {}
-}
+  if (client.finished()) {
 
-// List the feed names and Ids
-SerialUSB.println("Your Adafruit IO Feed Name/Id listing:");
-for (JsonArray::iterator it=array.begin(); it!=array.end(); ++it) {
-  JsonObject& feed = it->as<JsonObject&>();
-  feed["name"].printTo(SerialUSB);
-  SerialUSB.print("/");
-  feed["id"].printTo(SerialUSB);
-  SerialUSB.println();
+    SerialUSB.println();
+    SerialUSB.println("Response Body:");
+    while (client.available() > 0) {
+      char c = client.read();
+      SerialUSB.print(c);
+    }
+
+    SerialUSB.print("Response Code: ");
+    SerialUSB.println(client.getResponseCode());
+
+    while (1) {} // stop
+
+  } else {
+    // not finished yet, wait and retry
+    SerialUSB.print(".");
+    delay(100);
+  }
 }
 ```
 
