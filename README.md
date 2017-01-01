@@ -14,6 +14,54 @@ Features
 * Built on top of the Bridge library
 * Uses cURL on the Linux side
 
+Examples
+--------
+
+__List the names and Ids of your Adafruit IO Feeds__
+
+```c++
+BridgeHttpClient client;
+
+// Add request headers
+// REPLACE THE XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX WITH YOUR AIO KEY!!!
+client.addHeader("X-AIO-Key: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+client.addHeader("Accept: application/json");
+
+// Using HTTPS and peer cert. will not be able to auth.
+client.enableInsecure();
+
+// Adafruit IO REST API call
+client.get("https://io.adafruit.com/api/feeds");
+
+// Collect the response body into this string for parsing
+String response;
+
+while (client.available() > 0) {
+  char c = client.read();
+  response += c;
+}
+
+// Parse the list of feeds and print the name and ids, limited to 4 feeds
+const int JSON_BUFFER = JSON_ARRAY_SIZE(4) + 4*JSON_OBJECT_SIZE(14);
+StaticJsonBuffer<JSON_BUFFER> jsonBuffer;
+
+JsonArray& array = jsonBuffer.parseArray(response);
+if (!array.success()) {
+  SerialUSB.println("parseArray() failed");
+  while (1) {}
+}
+
+// List the feed names and Ids
+SerialUSB.println("Your Adafruit IO Feed Name/Id listing:");
+for (JsonArray::iterator it=array.begin(); it!=array.end(); ++it) {
+  JsonObject& feed = it->as<JsonObject&>();
+  feed["name"].printTo(SerialUSB);
+  SerialUSB.print("/");
+  feed["id"].printTo(SerialUSB);
+  SerialUSB.println();
+}
+```
+
 Usage
 -----
 
@@ -113,6 +161,16 @@ if (client.getResponseHeaderValue("Server", server)) {
   SerialUSB.println(server);
 } else {
   SerialUSB.println("Header \"Server\" not found");
+}
+```
+
+__HTTP response body__
+
+```c++
+SerialUSB.println("Response Body:");
+while (client.available() > 0) {
+  char c = client.read();
+  SerialUSB.print(c);
 }
 ```
 

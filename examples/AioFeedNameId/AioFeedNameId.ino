@@ -1,7 +1,7 @@
 /*
   Adafruit AIO REST API example
 
-  What it does: Get your feeds on the Adafruit IO using the REST API.
+  What it does: Lists your Adafruit IO Feed Name/Ids using the REST API.
 
   Please note that this sketch is Yun-specific!
   Works only with Yun and its clones like the Seeeduino Cloud, but not with
@@ -16,7 +16,7 @@
   4. Wait for the RED LED to light up on the board.
   5. Open the serial monitor in the Arduino IDE.
 
-  Written by Imre Horvath, 2016
+  Written by Imre Horvath, 2017
  */
 
 #include <Bridge.h>
@@ -49,15 +49,10 @@ void setup() {
   // Collect the response body into this string for parsing
   String response;
 
-  // Collect the response body
   while (client.available() > 0) {
     char c = client.read();
     response += c;
   }
-
-  // Print the HTTP response code
-  SerialUSB.print("Response code: ");
-  SerialUSB.println(client.getResponseCode());
 
   // Parse the list of feeds and print the name and ids, limited to 4 feeds
   const int JSON_BUFFER = JSON_ARRAY_SIZE(4) + 4*JSON_OBJECT_SIZE(14);
@@ -69,8 +64,15 @@ void setup() {
     while (1) {}
   }
 
-  // Pretty print the JSON to the serial console
-  array.prettyPrintTo(SerialUSB);
+  // List the feed names and Ids
+  SerialUSB.println("Your Adafruit IO Feed Name/Id listing:");
+  for (JsonArray::iterator it=array.begin(); it!=array.end(); ++it) {
+    JsonObject& feed = it->as<JsonObject&>();
+    feed["name"].printTo(SerialUSB);
+    SerialUSB.print("/");
+    feed["id"].printTo(SerialUSB);
+    SerialUSB.println();
+  }
 }
 
 void loop() {
