@@ -31,7 +31,7 @@ class BridgeHttpClient : public Process {
                          _user(NULL), _passwd(NULL),
                          _extraHeaderIdx(0) {}
 
-    /**
+    /*
      * Synchronous methods
      */
     void get(const char *url);
@@ -39,7 +39,7 @@ class BridgeHttpClient : public Process {
     void put(const char *url, const char *data);
     void del(const char *url);
 
-    /**
+    /*
      * Asynchronous methods
      */
     void getAsync(const char *url);
@@ -47,12 +47,12 @@ class BridgeHttpClient : public Process {
     void putAsync(const char *url, const char *data);
     void delAsync(const char *url);
 
-    /**
+    /*
      * Method to check, if the async request is still running or has finished.
      */
     bool finished();
 
-    /**
+    /*
      * Call this method after the request has finished,
      * to get the HTTP response code from the server.
      *
@@ -60,7 +60,7 @@ class BridgeHttpClient : public Process {
      */
     unsigned int getResponseCode();
 
-    /**
+    /*
      * Call this method after the request has finished,
      * to get the response headers received from the server.
      *
@@ -68,7 +68,7 @@ class BridgeHttpClient : public Process {
      */
     String getResponseHeaders();
 
-    /**
+    /*
      * Call this method before issuing the requests,
      * to allows "insecure" SSL.
      *
@@ -77,7 +77,7 @@ class BridgeHttpClient : public Process {
      */
     void enableInsecure();
 
-    /**
+    /*
      * Call this method before issuing the request,
      * to add an extra header to the request.
      *
@@ -85,25 +85,25 @@ class BridgeHttpClient : public Process {
      */
     int addHeader(const char *header);
 
-    /**
+    /*
      * Call this method before issuing the request,
      * to include basic authorization into the request.
      */
     void basicAuth(const char *user, const char *passwd);
 
-    /**
+    /*
      * Call this method between the different request calls on the same client,
      * to clear/setup the request headers for the next call.
      */
     void clearHeaders();
 
-    /**
+    /*
      * Call this method between the different request calls on the same client,
      * to clear the previously set basic authorization for the subsequent call.
      */
     void clearAuth();
 
-    /**
+    /*
      * Call this method after the request has finished,
      * to get a particular response header value.
      *
@@ -111,6 +111,12 @@ class BridgeHttpClient : public Process {
      * otherwise return false and doesn't set value parameter at all.
      */
     bool getResponseHeaderValue(const String& header, String& value);
+
+    /*
+     * Reset client request settings.
+     * Clears the request headers, basic auth. settings and the insecure-enabled flag.
+     */
+    void startRequest();
 
   private:
     String _tempFileName;
@@ -125,12 +131,12 @@ class BridgeHttpClient : public Process {
 
     String _cachedRespHeaders;
 
-    /**
+    /*
      * Sends the actual request via cURL on the Linux side
      */
     void request(const char *verb, const char *url, const char *data, bool async=false);
 
-    /**
+    /*
      * Clears the cached response headers between subsequent requests
      */
     void clearCachedRespHeaders();

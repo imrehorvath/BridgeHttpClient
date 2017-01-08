@@ -122,6 +122,12 @@ bool BridgeHttpClient::getResponseHeaderValue(const String& header, String& valu
   return true;
 }
 
+void BridgeHttpClient::startRequest() {
+  clearHeaders();
+  clearAuth();
+  _isInsecureEnabled = false;
+}
+
 void BridgeHttpClient::request(const char *verb, const char *url, const char *data, bool async) {
   Process p;
   p.runShellCommand("mktemp");
