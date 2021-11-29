@@ -1,25 +1,32 @@
 /*
-    Copyright (c) 2016 Imre Horvath. All rights reserved.
+  Copyright (c) 2016, 2021 Imre Horvath. All rights reserved.
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-    Lesser General Public License for more details.
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
- */
+  You should have received a copy of the GNU Lesser General Public
+  License along with this library; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+*/
 
 #include "BridgeHttpClient.h"
 
+BridgeHttpClient::BridgeHttpClient()
+  : _isInsecureEnabled(false),
+    _user(NULL),
+    _passwd(NULL),
+    _extraHeaderIdx(0) {
+}
+
 void BridgeHttpClient::get(const char *url) {
- request("GET", url, NULL);
+  request("GET", url, NULL);
 }
 
 void BridgeHttpClient::post(const char *url, const char *data) {
@@ -35,7 +42,7 @@ void BridgeHttpClient::del(const char *url) {
 }
 
 void BridgeHttpClient::getAsync(const char *url) {
- request("GET", url, NULL, true);
+  request("GET", url, NULL, true);
 }
 
 void BridgeHttpClient::postAsync(const char *url, const char *data) {
@@ -80,7 +87,7 @@ void BridgeHttpClient::enableInsecure() {
 }
 
 int BridgeHttpClient::addHeader(const char *header) {
-  if (_extraHeaderIdx < EXTRA_HEADERS_MAX) {
+  if (_extraHeaderIdx < maxNumberOfExtraHeaders) {
     _extraHeaders[_extraHeaderIdx++] = header;
     return 0;
   }
@@ -115,7 +122,7 @@ bool BridgeHttpClient::getResponseHeaderValue(const String& header, String& valu
   // Get the header value
   int startOfValue = _cachedRespHeaders.indexOf(':', startOfHeader) + 1;
   String respValue = _cachedRespHeaders.substring(startOfValue,
-                                                 _cachedRespHeaders.indexOf('\n', startOfValue));
+						  _cachedRespHeaders.indexOf('\n', startOfValue));
   respValue.trim();
 
   value = respValue;
