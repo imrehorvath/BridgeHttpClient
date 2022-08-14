@@ -104,7 +104,10 @@ void setup() {
 
   client.enableInsecure(); // Using HTTPS and peer cert. will not be able to auth.
 
-  client.postAsync("https://httpbin.org/post", "{\"key\":\"value\"}");
+  String data = "{\"sensorData\":\"";
+  data += 123;
+  data += "\"}";
+  client.postAsync("https://httpbin.org/post", data);
   SerialUSB.print("Sending request");
 }
 
@@ -172,7 +175,10 @@ __Synchronous requests__
 client.get("https://httpbin.org/headers");
 
 // HTTP POST a JSON payload, call won't return until finished
-client.post("https://httpbin.org/post", "{\"key\":\"value\"}");
+String data = "{\"sensorData\":\"";
+data += 123;
+data += "\"}";
+client.post("https://httpbin.org/post", data);
 ```
 
 __Asynchronous requests__
