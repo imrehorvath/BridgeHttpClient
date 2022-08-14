@@ -32,18 +32,34 @@ public:
   /*
    * Synchronous methods
    */
-  void get(const char *url);
-  void post(const char *url, const char *data);
-  void put(const char *url, const char *data);
-  void del(const char *url);
+  void get(const char* url);
+  void get(const String& url) {get(url.c_str());}
+  void post(const char* url, const char* data);
+  void post(const String& url, const char* data) {post(url.c_str(), data);}
+  void post(const char* url, const String& data) {post(url, data.c_str());}
+  void post(const String& url, const String& data) {post(url.c_str(), data.c_str());}
+  void put(const char* url, const char* data);
+  void put(const String& url, const char* data) {put(url.c_str(), data);}
+  void put(const char* url, const String& data) {put(url, data.c_str());}
+  void put(const String& url, const String& data) {put(url.c_str(), data.c_str());}
+  void del(const char* url);
+  void del(const String& url) {del(url.c_str());}
 
   /*
    * Asynchronous methods
    */
-  void getAsync(const char *url);
-  void postAsync(const char *url, const char *data);
-  void putAsync(const char *url, const char *data);
-  void delAsync(const char *url);
+  void getAsync(const char* url);
+  void getAsync(const String& url) {getAsync(url.c_str());}
+  void postAsync(const char* url, const char* data);
+  void postAsync(const String& url, const char* data) {postAsync(url.c_str(), data);}
+  void postAsync(const char* url, const String& data) {postAsync(url, data.c_str());}
+  void postAsync(const String& url, const String& data) {postAsync(url.c_str(), data.c_str());}
+  void putAsync(const char* url, const char* data);
+  void putAsync(const String& url, const char* data) {putAsync(url.c_str(), data);}
+  void putAsync(const char* url, const String& data) {putAsync(url, data.c_str());}
+  void putAsync(const String& url, const String& data) {putAsync(url.c_str(), data.c_str());}
+  void delAsync(const char* url);
+  void delAsync(const String& url) {delAsync(url.c_str());}
 
   /*
    * Method to check, if the async request is still running or has finished.
@@ -81,13 +97,17 @@ public:
    *
    * Returns 0 if the header fits into the array of headers. -1 otherwise.
    */
-  int addHeader(const char *header);
+  int addHeader(const char* header);
+  int addHeader(const String& header) {addHeader(header.c_str());}
 
   /*
    * Call this method before issuing the request,
    * to include basic authorization into the request.
    */
-  void basicAuth(const char *user, const char *passwd);
+  void basicAuth(const char* user, const char* passwd);
+  void basicAuth(const String& user, const char* passwd) {basicAuth(user.c_str(), passwd);}
+  void basicAuth(const char* user, const String& passwd) {basicAuth(user, passwd.c_str());}
+  void basicAuth(const String& user, const String& passwd) {basicAuth(user.c_str(), passwd.c_str());}
 
   /*
    * Call this method between the different request calls on the same client,
@@ -121,12 +141,12 @@ private:
 
   bool _isInsecureEnabled;
 
-  const char *_user;
-  const char *_passwd;
+  const char* _user;
+  const char* _passwd;
 
   // The library supports up to 16 user addable request headers
   static const unsigned maxNumberOfExtraHeaders = 16;
-  const char *_extraHeaders[maxNumberOfExtraHeaders];
+  const char* _extraHeaders[maxNumberOfExtraHeaders];
   int _extraHeaderIdx;
 
   String _cachedRespHeaders;
@@ -134,7 +154,7 @@ private:
   /*
    * Sends the actual request via cURL on the Linux side
    */
-  void request(const char *verb, const char *url, const char *data, bool async=false);
+  void request(const char* verb, const char* url, const char* data, bool async=false);
 
   /*
    * Clears the cached response headers between subsequent requests
